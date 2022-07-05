@@ -22,7 +22,6 @@ router.post('/', (req, res) => {
         timestamp : Date.now(),
         products: []
     };
-    console.log(newCart);
     const getCart = (async () => {
         const newId = await colCart.save(newCart);
         res.send(`carrito agregado id: ${newId}`);
@@ -43,11 +42,10 @@ router.get('/:id/products', (req, res) => {
         const id = parseInt(req.params.id);
         if (isNaN(id)) return res.status(400).send({error: "el parámetro no es un número"});
         const cart = await colCart.getById(id);
-        console.log("carrito que trae del getbyid", cart)
         if (!cart) res.status(404).send({error: "carrito no encontrado"});
         else {
-            const products = cart.products;
-            res.json({products});
+            const products = cart[0].products;
+            res.send({products});
         }
     }) ();
 });
@@ -56,7 +54,6 @@ router.get('/:id/products', (req, res) => {
 router.post('/:id/products', (req, res) => {
     const idCart = parseInt(req.params.id);
     const idProduct = req.body.id;
-    console.log(idProduct)
     const getProduct = (async () => {
         if (isNaN(idProduct)) return res.status(400).send({error: "el parámetro no es un número"});
         const productToAdd = await colProduct.getById(idProduct);
@@ -67,11 +64,9 @@ router.post('/:id/products', (req, res) => {
                 console.log("carrito en post", cart)
                 if (!cart) res.send('error: no existe ese carrito');
                 else {
-                    cart.products.push(productToAdd[0]);
-                    console.log(productToAdd)
-                    console.log('Carrito con producto',cart)
+                    cart[0].products.push(productToAdd[0]);
                     const updateCart = (async () => {
-                        const cartModified = await colCart.replaceById(idCart, cart);
+                        const cartModified = await colCart.replaceById(idCart, cart[0]);
                         console.log('carrito modificado: ',cartModified)
                         res.send(`producto id: ${idProduct} agregado en carrito id: ${idCart}`);
                     }) ();
@@ -82,7 +77,7 @@ router.post('/:id/products', (req, res) => {
 });
 
 
-router.delete('/:id/productos/:id_prod', (req, res) => {
+router.delete('/:id/products/:id_prod', (req, res) => {
     const idCart = parseInt(req.params.id);
     const idProduct = parseInt(req.params.id_prod);
     if ( isNaN(idCart) || isNaN(idProduct) ) return res.status(400).send({error: "algún parámetro no es un número"});
@@ -91,13 +86,12 @@ router.delete('/:id/productos/:id_prod', (req, res) => {
             const cart = await colCart.getById(idCart)
             if (!cart) res.send('error: no existe ese carrito');
             else {
-                const productFind = cart.products.find((elem) => elem.id === idProduct);
+                const productFind = cart[0].products.find((prod) => prod.id === idProduct);
                 if (!productFind) res.send('error: no existe ese producto en el carrito');
                 else {
-                    cart.products = cart.products.filter((elem) => elem.id !== idProduct);
+                    cart[0].products = cart[0].products.filter((elem) => elem.id !== idProduct);
                     const updateCart = (async () => {
-                        const cartModified = await colCart.replaceById(idCart, cart);
-                        console.log(cartModified)
+                        const cartModified = await colCart.replaceById(idCart, cart[0]);
                         res.send(`producto id: ${idProduct} eliminado del carrito id: ${idCart}`);
                     }) ();
                 }

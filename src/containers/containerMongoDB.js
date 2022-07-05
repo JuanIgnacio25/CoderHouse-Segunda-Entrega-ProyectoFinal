@@ -27,20 +27,10 @@ class Container {
     }
     
 
-    //Agregué este método para complementar el put por id
     async replaceById(idSearch, data) {
         try {
-            await this.collection.updateOne({id: idSearch}, {$set: {
-                title: data.title,
-                description: data.description,
-                code: data.code,
-                thumbnail: data.thumbnail,
-                price: data.price,
-                stock: data.stock
-            }})
-            const result = await this.collection.find({id: idSearch})
-            console.log(result)
-            return result
+            await this.collection.findOneAndUpdate({id: idSearch}, {$set: data})
+            return  await this.collection.find({id: idSearch})    
         }
         catch (error) {
             console.log("error al reemplazar datos: ", error);
@@ -72,8 +62,7 @@ class Container {
 
     async deleteById(idSearch) {
         try {
-            const result = await this.collection.deleteOne({id: idSearch});
-            return result;
+            return await this.collection.deleteOne({id: idSearch});
         }
         catch (error) {
             console.log("error en deleteById): ", error);
